@@ -8,7 +8,10 @@ import org.everit.json.schema.ValidationException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
 import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.data.redis.core.script.DigestUtils;
 import org.springframework.stereotype.Service;
+import org.apache.commons.codec.digest.DigestUtils;
+
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,7 +30,10 @@ public class PlanService {
         if (!validateJson(plan)) {
             throw new Exception("Plan data is not valid according to the schema.");
         }
-
+        ObjectMapper objectMapper = new ObjectMapper();
+        String planJson = objectMapper.writeValueAsString(plan);
+        String etag = "\"" + DigestUtils.md5Hex(planJson) + "\"";  // ETag with double quotes
+        plan.setEtag(etag);
         return planRepository.save(plan);
     }
     public boolean validateJson(Plan plan) {
@@ -42,7 +48,6 @@ public class PlanService {
             return true;
         } catch (ValidationException e) {
             System.err.println("Validation error: " + e.getMessage());
-            // Log details of each violation
             e.getCausingExceptions().stream()
                     .map(ValidationException::getMessage)
                     .forEach(System.err::println);
