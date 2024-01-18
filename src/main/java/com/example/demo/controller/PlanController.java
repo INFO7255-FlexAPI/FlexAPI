@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.model.Plan;
 import com.example.demo.service.PlanService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.script.DigestUtils;
 import org.springframework.http.HttpHeaders;
@@ -18,9 +19,15 @@ public class PlanController {
     @Autowired
     private PlanService planService;
 
+
     @PostMapping("/plan")
-    public ResponseEntity<Plan> createPlan(@RequestBody Plan plan) throws Exception {
-        Plan savedPlan = planService.savePlan(plan);
+    public ResponseEntity<Plan> createPlan(@RequestBody Plan plan, HttpServletRequest request) throws Exception {
+        String bearerToken = request.getHeader("Authorization");
+        bearerToken = bearerToken.substring(7);
+
+        // Assuming that the PlanService's savePlan method has been updated to accept the token
+        Plan savedPlan = planService.savePlan(plan, bearerToken);
+
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setETag(savedPlan.getEtag());
         return ResponseEntity.ok().headers(responseHeaders).body(savedPlan);
